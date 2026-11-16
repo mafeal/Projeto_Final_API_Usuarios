@@ -8,6 +8,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseSwaggerUi(op => op.SwaggerEndpoint("/openapi/v1.json", "API - Usuários"));
 }
 
 app.UseHttpsRedirection();
