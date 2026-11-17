@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Mvc;
 using Projeto_Final_API_Usuarios.Dtos;
+using Projeto_Final_API_Usuarios.Services;
 
 namespace Projeto_Final_API_Usuarios.Endpoints;
 
@@ -8,41 +10,21 @@ public static class UsuariosEndpoints
     {
         var usuarios = app.MapGroup("/api/v1/usuarios");
 
-        usuarios.MapGet("/", () => ListarUsuarios());
+        usuarios.MapGet("/", ([FromServices] UsuarioService usuarioService) =>
+            Results.Ok(usuarioService.GetUsuarios()));
 
-        usuarios.MapGet("/{id:guid}", (Guid id) => ConsultarUsuarioPorId(id));
+        usuarios.MapGet("/{id:guid}", ([FromServices] UsuarioService usuarioService, Guid id) =>
+            Results.Ok(usuarioService.GetUsuarioPorId(id)));
 
-        usuarios.MapPost("/", (EntradaUsuarioDto usuario) => CadastrarUsuario(usuario));
+        usuarios.MapPost("/", ([FromServices] UsuarioService usuarioService, EntradaUsuarioDto entrada) =>
+            Results.Created("/", usuarioService.PostUsuario(entrada)));
 
-        usuarios.MapPut("/{id:guid}", (Guid id, EntradaUsuarioDto usuario) => AtualizarUsuario(id, usuario));
+        usuarios.MapPut("/{id:guid}", ([FromServices] UsuarioService usuarioService, Guid id, EntradaAlterarUsuarioDto entrada) =>
+            Results.Ok(usuarioService.PutAlterarUsuarioPorId(id, entrada)));
 
-        usuarios.MapPatch("/{id:guid}/desativacao", (Guid id) => DesativarUsuario(id));
+        usuarios.MapPatch("/{id:guid}/desativacao", ([FromServices] UsuarioService usuarioService, Guid id) =>
+            Results.Ok(usuarioService.PatchDesativarUsuarioPorId(id)));
         
         return usuarios;
-    }
-
-    private static object DesativarUsuario(Guid id)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static object AtualizarUsuario(Guid id, EntradaUsuarioDto usuario)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static object CadastrarUsuario(EntradaUsuarioDto usuario)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static object ConsultarUsuarioPorId(Guid id)
-    {
-        throw new NotImplementedException();
-    }
-
-    private static object ListarUsuarios()
-    {
-        throw new NotImplementedException();
     }
 }

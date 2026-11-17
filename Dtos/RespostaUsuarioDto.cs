@@ -6,6 +6,7 @@ public class RespostaUsuarioDto
     public string Nome { get; set; } = "";
     public string Email { get; set; } = "";
     public bool Ativo { get; set; }
-    public DateTime CriadoEm { get; set; }
+    public string CriadoEm { get; set; }
+    public string? AtualizadoEm { get; set; }
     public string? Cargo { get; set; }
 }
