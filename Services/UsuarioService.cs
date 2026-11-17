@@ -15,35 +15,50 @@ public class UsuarioService
         _repository.CarregarDadosMockadosNoDicionario();
     }
 
-    public SaidaUsuarioDto GetUsuarios()
+    public Tuple<int, SaidaUsuarioDto> GetUsuarios()
     {
         var usuarios = _repository.UsuariosData.Values;
 
+        if (usuarios.Count == 0)
+            return new Tuple<int, SaidaUsuarioDto>((int)HttpStatusCode.NoContent, new());
+
         var usuariosMapeados = MapearRespostaUsuario(usuarios);
 
         var reponse = new SaidaUsuarioDto
         {
             DadosResposta = usuariosMapeados,
-            TempoDaResposta = "14s"
+            TempoDaResposta = "14s",
         };
 
-        return reponse;
+        return new Tuple<int, SaidaUsuarioDto>((int)HttpStatusCode.OK, reponse);
     }
 
-    public SaidaUsuarioDto GetUsuarioPorId(Guid id)
+    public Tuple<int, dynamic> GetUsuarioPorId(Guid id)
     {
-        var usuarios = _repository.UsuariosData.Values
-                            .Where(u => u.Id.Equals(id));
+        var usuarios = _repository.UsuariosData.Values.Where(u => u.Id.Equals(id));
+
+        if (usuarios.Count() == 0)
+        {
+            var erro = new RespostaErroDto
+            {
+                Codigo = "404 - Não Encontrado",
+                Mensagem = "Não existe usuario com o Id informado.",
+            };
+
+            var erroReponse = new SaidaErroDto { DadosResposta = erro, TempoDaResposta = "14s" };
+
+            return new Tuple<int, dynamic>((int)HttpStatusCode.NotFound, erroReponse);
+        }
 
         var usuariosMapeados = MapearRespostaUsuario(usuarios);
 
         var reponse = new SaidaUsuarioDto
         {
             DadosResposta = usuariosMapeados,
-            TempoDaResposta = "14s"
+            TempoDaResposta = "14s",
         };
 
-        return reponse;
+        return new Tuple<int, dynamic>((int)HttpStatusCode.OK, reponse);
     }
 
     public SaidaUsuarioDto PostUsuario(EntradaUsuarioDto entrada)
@@ -53,7 +68,7 @@ public class UsuarioService
             Nome = entrada.Nome!,
             Email = entrada.Email!,
             SenhaHash = "#Senha_" + entrada.Senha,
-            Cargo = entrada.Cargo!
+            Cargo = entrada.Cargo!,
         };
 
         _repository.UsuariosData.TryAdd(usuario.Id, usuario);
@@ -64,18 +79,17 @@ public class UsuarioService
         var reponse = new SaidaUsuarioDto
         {
             DadosResposta = usuariosMapeados,
-            TempoDaResposta = "14s"
+            TempoDaResposta = "14s",
         };
 
         return reponse;
     }
-    
+
     public SaidaUsuarioDto PutAlterarUsuarioPorId(Guid id, EntradaAlterarUsuarioDto entrada)
     {
-        var usuario = _repository.UsuariosData.Values
-                            .FirstOrDefault(u => u.Id.Equals(id));
+        var usuario = _repository.UsuariosData.Values.FirstOrDefault(u => u.Id.Equals(id));
 
-        if(usuario == null)
+        if (usuario == null)
             throw new Exception("Usuário não encontrado");
 
         AtualizarUsuario(usuario, entrada);
@@ -88,7 +102,7 @@ public class UsuarioService
         var reponse = new SaidaUsuarioDto
         {
             DadosResposta = usuariosMapeados,
-            TempoDaResposta = "14s"
+            TempoDaResposta = "14s",
         };
 
         return reponse;
@@ -96,9 +110,10 @@ public class UsuarioService
 
     private Usuario AtualizarUsuario(Usuario usuario, EntradaAlterarUsuarioDto entrada)
     {
-        bool usuarioNaoMudou = usuario.Nome == entrada.Nome &&
-                               usuario.Email == entrada.Email &&
-                               usuario.Cargo == entrada.Cargo;
+        bool usuarioNaoMudou =
+            usuario.Nome == entrada.Nome
+            && usuario.Email == entrada.Email
+            && usuario.Cargo == entrada.Cargo;
 
         if (!string.IsNullOrEmpty(entrada.Nome))
             usuario.Nome = entrada.Nome;
@@ -109,21 +124,19 @@ public class UsuarioService
         if (!string.IsNullOrEmpty(entrada.Cargo))
             usuario.Cargo = entrada.Cargo;
 
-        if(!usuarioNaoMudou)
+        if (!usuarioNaoMudou)
         {
             usuario.AtualizadoEm = DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss");
         }
-            
+
         return usuario;
     }
 
-
     public SaidaUsuarioDto PatchDesativarUsuarioPorId(Guid id)
     {
-        var usuario = _repository.UsuariosData.Values
-                            .FirstOrDefault(u => u.Id.Equals(id));
+        var usuario = _repository.UsuariosData.Values.FirstOrDefault(u => u.Id.Equals(id));
 
-        if(usuario == null)
+        if (usuario == null)
             throw new Exception("Usuário não encontrado");
 
         usuario.Ativo = false;
@@ -135,13 +148,15 @@ public class UsuarioService
         var reponse = new SaidaUsuarioDto
         {
             DadosResposta = usuariosMapeados,
-            TempoDaResposta = "14s"
+            TempoDaResposta = "14s",
         };
 
         return reponse;
-    }   
-    
-    private static IEnumerable<RespostaUsuarioDto> MapearRespostaUsuario(IEnumerable<Usuario> usuarios)
+    }
+
+    private static IEnumerable<RespostaUsuarioDto> MapearRespostaUsuario(
+        IEnumerable<Usuario> usuarios
+    )
     {
         return usuarios.Select(u => new RespostaUsuarioDto
         {
@@ -151,7 +166,7 @@ public class UsuarioService
             Ativo = u.Ativo,
             CriadoEm = u.CriadoEm,
             AtualizadoEm = u.AtualizadoEm ?? null,
-            Cargo = u.Cargo
+            Cargo = u.Cargo,
         });
     }
 }
